@@ -80,7 +80,7 @@ func (c Client) Pages(resource string, page int64) ([]SupplierBase, bool, int64,
 		url = fmt.Sprintf("https://%s.vendhq.com/%s?page_size=200", c.DomainPrefix, resource)
 	}
 
-	body, _, err := c.MakeRequest("GET", url, nil)
+	body, err := c.MakeRequest("GET", url, nil)
 	if err != nil {
 		fmt.Printf("Error getting resource: %s", err)
 	}

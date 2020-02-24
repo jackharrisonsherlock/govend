@@ -43,7 +43,7 @@ func (c *Client) StoreCredits() ([]StoreCredit, error) {
 	storecredits := []StoreCredit{}
 
 	url := fmt.Sprintf("https://%v.vendhq.com/api/2.0/store_credits?page_size=1000", c.DomainPrefix)
-	data, _, err := c.MakeRequest("GET", url, nil)
+	data, err := c.MakeRequest("GET", url, nil)
 	if err != nil {
 		return []StoreCredit{}, fmt.Errorf("Failed to retrieve a page of data %v", err)
 	}
