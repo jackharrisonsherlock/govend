@@ -51,8 +51,7 @@ func (c *Client) NewRequest(method, url string, body interface{}) (*http.Request
 }
 
 // Do request
-func (c *Client) Do(req *http.Request) ([]byte, int, error) {
-
+func (c *Client) Do(req *http.Request) ([]byte, error) {
 	client := http.DefaultClient
 	var attempt int
 	var resp *http.Response
@@ -71,60 +70,43 @@ func (c *Client) Do(req *http.Request) ([]byte, int, error) {
 	}
 
 	defer resp.Body.Close()
-	if ResponseCheck(resp.StatusCode) {
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("\nError while reading response body: %s\n", err)
-			return nil, resp.StatusCode, err
-		}
-		return responseBody, resp.StatusCode, err
+	ResponseCheck(resp.StatusCode)
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("\nError while reading response body: %s\n", err)
+		return nil, err
 	}
 
-	return nil, resp.StatusCode, err
+	return responseBody, err
 }
 
-func (c Client) MakeRequest(method, url string, body interface{}) ([]byte, int, error) {
+func (c Client) MakeRequest(method, url string, body interface{}) ([]byte, error) {
 	req, err := c.NewRequest(method, url, body)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	var res []byte
-	statusCode := 300
-	try := 1
-
-	// Inconsistant responses from data 2013/2014 retry if you we receieve anything less that 300 response
-	for statusCode > 299 {
-		req, err = c.NewRequest(method, url, body)
-		res, statusCode, err = c.Do(req)
-		try++
-		time.Sleep(1 * time.Second)
-		if try > 10 {
-			break
-		}
-	}
+	res, err := c.Do(req)
 	if err != nil {
-		return nil, statusCode, err
+		return nil, err
 	}
 
-	return res, statusCode, nil
+	return res, nil
 }
 
 // ResourcePage gets a single page of data from a 2.0 API resource using a version attribute.
 func (c *Client) ResourcePage(version int64, method, resource string) ([]byte, int64, error) {
 
 	url := c.urlFactory(version, "", resource)
-	body, _, err := c.MakeRequest(method, url, nil)
+	body, err := c.MakeRequest(method, url, nil)
 	response := Payload{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		fmt.Printf("Error unmarshalling payload: %s", err)
 		return nil, 0, err
 	}
-
 	data := response.Data
 	version = response.Version["max"]
-
 	return data, version, err
 }
 
@@ -133,7 +115,7 @@ func (c *Client) ResourcePageFlake(id, method, resource string) ([]byte, string,
 
 	// Build the URL for the resource page.
 	url := c.urlFactoryFlake(id, resource)
-	body, _, err := c.MakeRequest(method, url, nil)
+	body, err := c.MakeRequest(method, url, nil)
 	payload := map[string][]interface{}{}
 	err = json.Unmarshal(body, &payload)
 	if err != nil {
