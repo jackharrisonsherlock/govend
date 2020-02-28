@@ -155,7 +155,7 @@ func (c *Client) GetStartVersion(dateFrom time.Time, dateStr string) (int64, err
 
 	endpoint := fmt.Sprintf("https://%s.vendhq.com/api/2.0/search?type=sales&date_from=%s&page_size=1&order_direction=asc", c.DomainPrefix, queryDateFrom)
 
-	body, _, err := c.MakeRequest("GET", endpoint, nil)
+	body, err := c.MakeRequest("GET", endpoint, nil)
 	if err != nil {
 		return 0, err
 	}
